@@ -14,8 +14,16 @@ int alphacmp(const void* a, const void* b)
     char* x = *((char**) a);
     char* y = *((char**) b);
 
+    char* t1 = x;
+    char* t2 = y;
+
     while(*x == '.' || *x == '/'|| *x == '~') x++;
     while(*y == '.' || *y == '/'|| *y == '~') y++;
+
+    if(*x == '\0' && *y == '\0')
+    {
+        return (strlen(t1) < strlen(t2) ? -1 : 1);
+    }
 
     return strcasecmp(x, y);
 }
@@ -24,10 +32,15 @@ int alphacmp_sdir(const struct dirent **a, const struct dirent **b)
 {
     const char* x = (*a)->d_name;
     const char* y = (*b)->d_name;
-
+    const char* t1 = x;
+    const char* t2 = y;
     while(*x == '.' || *x == '/'|| *x == '~') x++;
     while(*y == '.' || *y == '/'|| *y == '~') y++;
 
+    if(*x == '\0' && *y == '\0')
+    {
+        return (strlen(t1) < strlen(t2) ? -1 : 1);
+    }
     return strcasecmp(x, y);
 }
 
@@ -79,11 +92,11 @@ int list_dir(char *dir, char* cur_dir, int flags)
             printf("%c ", perm & S_IXOTH ? 'x' : '-');
             
             printf("%ld ", stats.st_nlink); 
- 
+
             struct tm* date;
             struct passwd* u_name;
             struct group* g_name;
-            
+
             u_name = getpwuid(stats.st_uid);
             g_name = getgrgid(stats.st_gid);
             printf("%s %s ", u_name->pw_name, g_name->gr_name);
@@ -93,7 +106,7 @@ int list_dir(char *dir, char* cur_dir, int flags)
             date = localtime(&(stats.st_mtime));
             printf("%s %02d %d:%d ", months[date->tm_mon], date->tm_mday, date->tm_hour, date->tm_min);
         }
-        
+
         if((perm & S_IXUSR) || (perm & S_IXGRP) || (perm & S_IXOTH))
         {
             printf(C_EXEC);
@@ -126,9 +139,9 @@ int list_dir(char *dir, char* cur_dir, int flags)
         return -1;
     }
 
-    int nlink_length = 0, size_length = 0, user_size = 0, size_grp = 0;
+    int nlink_length = 0, size_length = 0, user_size = 0, size_grp = 0, blk_size = 0;
     for(int i = 0; i < n; i++)
-    {
+    {   
         char path[DIR_NAME_MAX] = {'\0'};
         strcpy(path, cur_dir);
         strcpy(path + strlen(cur_dir), list[i]->d_name);
@@ -142,6 +155,7 @@ int list_dir(char *dir, char* cur_dir, int flags)
             printRESET();
             return -1;
         }
+        blk_size += sb.st_blocks;
         int t_nlink_length = 1, t_size_length = 1;
         long long t_nlink = sb.st_nlink, t_size = sb.st_size; 
         while(t_nlink/10 > 0)
@@ -166,6 +180,8 @@ int list_dir(char *dir, char* cur_dir, int flags)
         user_size = max(user_size, strlen(u_name->pw_name));
         size_grp = max(size_grp, strlen(g_name->gr_name));
     }
+    if(flags%2 == 0)
+        printf("total %d\n", blk_size/2);
     for(int i = 0; i < n; i++)
     {
         if(flags%3 != 0 && (list[i]->d_name)[0] == '.')
@@ -187,7 +203,6 @@ int list_dir(char *dir, char* cur_dir, int flags)
             printRESET();
             return -1;
         }
-
         mode_t perm = sb.st_mode;
         if(flags%2 == 0)
         {
