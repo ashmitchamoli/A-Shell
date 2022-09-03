@@ -14,6 +14,8 @@ void init_shell()
     {
         perror(C_ERROR "A-Shell: cannot create '/tmp/A-Shell_history.txt'");
         printRESET();
+        fclose(f_hist);
+        exit(1);
     }
     if(gethostname(ROOT, HOST_NAME_MAX) == -1)
     {
