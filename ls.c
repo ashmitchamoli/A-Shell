@@ -4,11 +4,6 @@
 extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
 
-int max(int a, int b)
-{
-    return a > b ? a : b;
-}
-
 int alphacmp(const void* a, const void* b)
 {
     char* x = *((char**) a);

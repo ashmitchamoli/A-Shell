@@ -47,3 +47,13 @@ void printRESET()
 {
     printf("\033[0m");
 }
+
+int min(int a, int b)
+{
+    return a > b ? b : a;
+}
+
+int max(int a, int b)
+{
+    return a > b ? a : b;
+}

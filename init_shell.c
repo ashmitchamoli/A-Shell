@@ -9,6 +9,12 @@ extern int S_INIT_DIR;
 
 void init_shell()
 {
+    FILE* f_hist = fopen("/tmp/A-Shell_history.txt", "a+");
+    if(f_hist == NULL)
+    {
+        perror(C_ERROR "A-Shell: cannot create '/tmp/A-Shell_history.txt'");
+        printRESET();
+    }
     if(gethostname(ROOT, HOST_NAME_MAX) == -1)
     {
         perror("\033[1;31mA-Shell");

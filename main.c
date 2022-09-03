@@ -14,6 +14,11 @@ int main()
     while(1)
     {
         char* inp = get_input();
+        if(inp == NULL)
+        {
+            prompt();
+            continue;
+        }
         char** list = get_commands(inp);
         if(list == NULL)
         {

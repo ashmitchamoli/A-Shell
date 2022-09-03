@@ -2,6 +2,7 @@
 #include "headers.h"
 #include "cd.h"
 #include "ls.h"
+#include "history.h"
 
 void execute_cmd(char* command)
 {
@@ -104,6 +105,22 @@ void execute_cmd(char* command)
             temp = strtok(NULL, " \t");
         }
         A_Shell_ls(dirs, num_dirs, flag);
+    }
+    else if(strcmp("discover", temp) == 0)
+    {
+
+    }
+    else if(strcmp("history", temp) == 0)
+    {
+        temp = strtok(NULL, " \t");
+        if(temp != NULL)
+        {
+            printf(C_ERROR "A-Shell: history: too many arguments\n");
+            printRESET();
+            fflush(stdout);
+            return;
+        }
+        A_Shell_history();
     }
     else
     {
