@@ -71,16 +71,17 @@ void A_Shell_discover(char* dir, char* target, int flags)
         }
         else
         {
+            if(strcmp(list[i]->d_name, ".") == 0 || strcmp(list[i]->d_name, "..") == 0)
+            {
+                continue;
+            }
             if((flags != 3) && (target == NULL || strcmp(target, list[i]->d_name) == 0))
             {
                 printf(C_DIR"%s\n", path);
                 fflush(stdout);
                 printRESET();
             }
-            if(strcmp(list[i]->d_name, ".") != 0 && strcmp(list[i]->d_name, "..") != 0)
-            {
-                A_Shell_discover(path, target, flags);
-            }
+            A_Shell_discover(path, target, flags);
         }
         free(list[i]);
     }

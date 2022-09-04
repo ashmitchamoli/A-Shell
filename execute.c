@@ -4,6 +4,7 @@
 #include "ls.h"
 #include "history.h"
 #include "discover.h"
+#include "pinfo.h"
 
 extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
@@ -198,7 +199,49 @@ void execute_cmd(char* command)
         // else
         //     printf(C_ERROR"%s\n", target);
         // printRESET();
-        A_Shell_discover(__dir, target, flag);
+        struct stat __dir_stat;
+        if(__dir == NULL)
+        {
+            if((flag != 3) && (target == NULL))
+                printf( C_DIR".\n");
+            printRESET();
+            fflush(stdout);
+            A_Shell_discover(__dir, target, flag);
+        }
+        else if(stat(__dir, &__dir_stat) == -1)
+        {
+            printf(C_ERROR"A-Shell: discover");
+            fflush(stdout);
+            perror(C_ERROR);
+            return;
+        }
+
+        if(__dir != NULL && S_ISDIR(__dir_stat.st_mode))
+        {
+            if((flag != 3) && (target == NULL))
+            {
+                printf(C_DIR);
+                printf("%s", __dir);
+                printRESET();
+                fflush(stdout);
+            }
+            A_Shell_discover(__dir, target, flag);
+        }
+        else if(__dir != NULL)
+        {
+            if((__dir_stat.st_mode & S_IXUSR) || (__dir_stat.st_mode & S_IXGRP) || (__dir_stat.st_mode & S_IXOTH))
+            {
+                printf(C_EXEC);
+            }
+            else
+            {
+                printf(C_FILE);
+            }
+            if((flag != 2) && (target == NULL || strcmp(target, __dir) == 0))    
+                printf("%s\n", __dir); 
+            printRESET();
+            fflush(stdout);     
+        } 
     }
     else if(strcmp("history", temp) == 0)
     {
@@ -211,6 +254,36 @@ void execute_cmd(char* command)
             return;
         }
         A_Shell_history();
+    }
+    else if(strcmp("pinfo", temp) == 0)
+    {
+        char* pid = NULL;
+        temp = strtok(NULL, " \t");
+        pid = temp;
+        temp = strtok(NULL, " \t");
+        if(temp != NULL)
+        {
+            printf(C_ERROR "A-Shell: history: too many arguments\n");
+            printRESET();
+            fflush(stdout);
+            return;
+        }
+        if(pid == NULL)
+        {
+            A_Shell_pinfo(getpid());
+            return;
+        }
+        for(int i = 0; i < strlen(pid); i++)
+        {
+            if(!isdigit(pid[i]))
+            {
+                printf(C_ERROR "A-Shell: history: numeric argument required\n");
+                printRESET();
+                fflush(stdout);
+                return;
+            }
+        }
+        A_Shell_pinfo(atoi(pid));
     }
     else
     {

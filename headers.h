@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
+#include <ctype.h>
 
 #define DIR_NAME_MAX 1024
 #define MAX_CMMDS 1024
