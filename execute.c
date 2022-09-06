@@ -10,19 +10,9 @@ extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
 
 void execute_cmd(char* command)
-{   
-    int isbg = 0;
-    char* bg_detect = command + strlen(command);
-    bg_detect--;
-    while(*bg_detect != '&' && *bg_detect != '\0')
-    {
-        bg_detect--;
-    }
-    bg_detect++;
-    if(*bg_detect == '&')
-    {
-        int isbg = 1;
-    }
+{
+    char cmd_copy[MAX_CMMD_LEN];
+    strcpy(cmd_copy, command);
     char* temp = strtok(command, " \t");
     if(temp == NULL)
     {
@@ -307,29 +297,31 @@ void execute_cmd(char* command)
             args[num_args++] = temp;
             temp  = strtok(NULL, " \t");
         }
-        
-        int pid = fork();
-        if(pid == 0)
+        int fork_id = fork();
+
+        if(fork_id== 0)
         {
-            int e = execvp(args[0], args);
-            if(e == -1)
-            {
-                printf(C_ERROR "A-Shell: %s: command not found", args[0]);
-                printRESET();
-                fflush(stdout);    
-                perror("");
-            }
+            int pid = getpid();
+            setpgid(pid, pid);
+            tcsetpgrp (STDIN_FILENO, pid);
+            signal (SIGTTIN, SIG_DFL);
+            signal (SIGTTOU, SIG_DFL);
+            execvp(args[0], args);
+            fprintf(stderr, C_ERROR "A-Shell: %s: command not found", args[0]);
+            printRESET();
+            fflush(stdout);
+            perror(C_ERROR"");
+            printRESET();
             exit(2);
         }
         else
         {
+            int pid = getpid();
+            setpgid(pid, pid);
             int w;
-            waitpid(pid, &w, WUNTRACED);
+            waitpid(fork_id, &w, WUNTRACED);
+            tcsetpgrp (STDIN_FILENO, pid);
             return;
-            // if(w < )
-            // {
-                
-            // }
         }
 
         printf(C_ERROR "A-Shell: %s: command not found\n", temp);

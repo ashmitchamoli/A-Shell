@@ -1,7 +1,14 @@
 #include "input.h"
 #include "headers.h"
+#include "process_list.h"
 
 extern int num_cmmds;
+extern char USER[LOGIN_NAME_MAX];
+
+void bg_handler(int pid)
+{
+
+}
 
 void handle_history(char* inp)
 {
@@ -18,10 +25,14 @@ void handle_history(char* inp)
     inp[__n] = '\n';
     char hist[MAX_HIST][MAX_CMMD_LEN];
     int num_ent = 0;
-    FILE* f_hist = fopen("/tmp/A-Shell_history.txt", "r");
+    char path[DIR_NAME_MAX] = {'\0'};
+    strcpy(path, "/home/");
+    strcat(path, USER);
+    strcat(path, "/.A_Shell_history.txt\0");
+    FILE* f_hist = fopen(path, "r");
     if(f_hist == NULL)
     {
-        perror(C_ERROR "A-Shell: cannot read /tmp/A-Shell_history.txt");
+        perror(C_ERROR "A-Shell: cannot read history file");
         exit(1);
     }
     while(fgets(hist[num_ent], MAX_CMMD_LEN, f_hist) != NULL)
@@ -35,7 +46,7 @@ void handle_history(char* inp)
         inp[__n] = '\0';
         return;
     }
-    f_hist = fopen("/tmp/A-Shell_history.txt", "w");
+    f_hist = fopen(path, "w");
     if(num_ent > MAX_HIST)
     {
         printf(C_ERROR "A-Shell: files tampered");
@@ -50,7 +61,7 @@ void handle_history(char* inp)
             w = fputs(hist[i], f_hist);
             if(w == EOF)
             {
-                perror(C_ERROR "A-Shell: error writing '/temp/A-Shell_history.txt'");
+                perror(C_ERROR "A-Shell: error writing history file");
                 fclose(f_hist);
                 exit(1);
             }
@@ -59,7 +70,7 @@ void handle_history(char* inp)
         w = fputs(inp, f_hist);
         if(w == EOF)
         {
-            perror(C_ERROR "A-Shell: error writing '/temp/A-Shell_history.txt'");
+            perror(C_ERROR "A-Shell: error writing history file");
             fclose(f_hist);
             exit(1);
         }
@@ -73,7 +84,7 @@ void handle_history(char* inp)
             w = fputs(hist[i], f_hist);
             if(w == EOF)
             {
-                perror(C_ERROR "A-Shell: error writing '/temp/A-Shell_history.txt'");
+                perror(C_ERROR "A-Shell: error writing history file");
                 fclose(f_hist);
                 exit(1);
             }
@@ -82,7 +93,7 @@ void handle_history(char* inp)
         w = fputs(inp, f_hist);
         if(w == EOF)
         {
-            perror(C_ERROR "A-Shell: error writing '/temp/A-Shell_history.txt'");
+            perror(C_ERROR "A-Shell: error writing history file");
             fclose(f_hist);
             exit(1);
         }
@@ -123,10 +134,31 @@ char** get_commands(char* inp)
         return NULL;
     }
     char** commands = (char**) malloc(sizeof(char*)*MAX_CMMDS);
+    char** bg_process = (char**)  malloc(sizeof(char*)*MAX_BG_PROC);
+    int num_bg = 0;
     while(temp != NULL)
     {
         commands[num_cmmds++] = temp;
-        temp = strtok(NULL, ";&");
+        temp = strtok(NULL, ";");
     }
-    return commands;
+    char** shell_commands = (char**) malloc(sizeof(char*)*MAX_CMMDS);
+    int num_shell_cmmds = 0;
+    for(int i = 0; i < num_cmmds; i++)
+    {
+        char* prev = commands[i]; int n = strlen(commands[i]);
+        for(int j = 0; j < n; j++)
+        {
+            if(commands[i][j] == '&')
+            {
+                commands[i][j] = '\0';
+                bg_process[num_bg++] = prev;
+                if(i+1 < n)
+                    prev = &(commands[i][j+1]);
+            }
+        }
+        shell_commands[num_shell_cmmds++] = prev;
+    }
+    free(commands);
+    num_cmmds = num_shell_cmmds;
+    return shell_commands;
 }

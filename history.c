@@ -1,12 +1,18 @@
 #include "history.h"
 #include "headers.h"
 
+extern char USER[LOGIN_NAME_MAX];
+
 void A_Shell_history()
 {
-    FILE* f_hist = fopen("/tmp/A-Shell_history.txt", "r");
+    char path[DIR_NAME_MAX] = {'\0'};
+    strcpy(path, "/home/");
+    strcat(path, USER);
+    strcat(path, "/.A_Shell_history.txt\0");
+    FILE* f_hist = fopen(path, "r");
     if(f_hist == NULL)
     {
-        perror(C_ERROR"A-Shell: error opening '/tmp/A-Shell_history.txt'");
+        perror(C_ERROR"A-Shell: error opening history file");
         printRESET();
         return;
     }

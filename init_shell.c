@@ -9,14 +9,8 @@ extern int S_INIT_DIR;
 
 void init_shell()
 {
-    FILE* f_hist = fopen("/tmp/A-Shell_history.txt", "a+");
-    if(f_hist == NULL)
-    {
-        perror(C_ERROR "A-Shell: cannot create '/tmp/A-Shell_history.txt'");
-        printRESET();
-        fclose(f_hist);
-        exit(1);
-    }
+    signal (SIGTTIN, SIG_IGN);
+    signal (SIGTTOU, SIG_IGN);
     if(gethostname(ROOT, HOST_NAME_MAX) == -1)
     {
         perror("\033[1;31mA-Shell");
@@ -27,6 +21,19 @@ void init_shell()
     {
         perror("\033[1;31mA-Shell");
         printRESET();
+        exit(1);
+    }
+    char path[DIR_NAME_MAX] = {'\0'};
+    strcpy(path, "/home/");
+    strcat(path, USER);
+    strcat(path, "/.A_Shell_history.txt\0");
+    FILE* f_hist = fopen(path, "a+");
+    //printf("%s\n", path);
+    if(f_hist == NULL)
+    {
+        perror(C_ERROR "A-Shell: cannot create history file");
+        printRESET();
+        fclose(f_hist);
         exit(1);
     }
     memset(INIT_DIR, '\0', DIR_NAME_MAX);

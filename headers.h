@@ -30,6 +30,7 @@
 #define MAX_HIST 20
 #define DEFAULT_HIST 10
 #define MAX_ARGS 1024
+#define MAX_BG_PROC 1024
 
 void printRED();
 void printBLACK();
