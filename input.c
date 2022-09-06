@@ -117,7 +117,7 @@ char** get_commands(char* inp)
     handle_history(inp);
 
     num_cmmds = 0; //to count the number of commands
-    char* temp = strtok(inp, ";&");
+    char* temp = strtok(inp, ";");
     if(temp == NULL)
     {
         return NULL;

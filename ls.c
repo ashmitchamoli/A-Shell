@@ -150,7 +150,8 @@ int list_dir(char *dir, char* cur_dir, int flags)
             printRESET();
             return -1;
         }
-        blk_size += sb.st_blocks;
+        if(list[i]->d_name[0] != '.' || flags%3 == 0)
+            blk_size += sb.st_blocks;
         int t_nlink_length = 1, t_size_length = 1;
         long long t_nlink = sb.st_nlink, t_size = sb.st_size; 
         while(t_nlink/10 > 0)

@@ -14,6 +14,7 @@
 #include <sys/utsname.h>
 #include <sys/syscall.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <dirent.h>
 #include <time.h>
 #include <ctype.h>
@@ -28,6 +29,7 @@
 #define C_DIR "\033[1;034m"
 #define MAX_HIST 20
 #define DEFAULT_HIST 10
+#define MAX_ARGS 1024
 
 void printRED();
 void printBLACK();

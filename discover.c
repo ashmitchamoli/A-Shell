@@ -21,6 +21,7 @@ void A_Shell_discover(char* dir, char* target, int flags)
     if(!S_ISDIR(stat_dir.st_mode))
     {
         printf(C_ERROR"A-Shell: discover: no such directory exists\n");
+        printRESET();
         fflush(stdout);
         return;
     }
@@ -87,5 +88,4 @@ void A_Shell_discover(char* dir, char* target, int flags)
     }
     free(list);
     return;
-    
 }

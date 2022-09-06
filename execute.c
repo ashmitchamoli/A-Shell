@@ -10,7 +10,19 @@ extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
 
 void execute_cmd(char* command)
-{
+{   
+    int isbg = 0;
+    char* bg_detect = command + strlen(command);
+    bg_detect--;
+    while(*bg_detect != '&' && *bg_detect != '\0')
+    {
+        bg_detect--;
+    }
+    bg_detect++;
+    if(*bg_detect == '&')
+    {
+        int isbg = 1;
+    }
     char* temp = strtok(command, " \t");
     if(temp == NULL)
     {
@@ -287,6 +299,39 @@ void execute_cmd(char* command)
     }
     else
     {
+        char* args[MAX_ARGS]; int num_args  = 1;
+        args[0] = temp;
+        temp = strtok(NULL, " \t");
+        while(temp != NULL)
+        {
+            args[num_args++] = temp;
+            temp  = strtok(NULL, " \t");
+        }
+        
+        int pid = fork();
+        if(pid == 0)
+        {
+            int e = execvp(args[0], args);
+            if(e == -1)
+            {
+                printf(C_ERROR "A-Shell: %s: command not found", args[0]);
+                printRESET();
+                fflush(stdout);    
+                perror("");
+            }
+            exit(2);
+        }
+        else
+        {
+            int w;
+            waitpid(pid, &w, WUNTRACED);
+            return;
+            // if(w < )
+            // {
+                
+            // }
+        }
+
         printf(C_ERROR "A-Shell: %s: command not found\n", temp);
         printRESET();
         fflush(stdout);
