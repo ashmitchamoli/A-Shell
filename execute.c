@@ -5,7 +5,9 @@
 #include "history.h"
 #include "discover.h"
 #include "pinfo.h"
+#include "init_shell.h"
 
+extern time_t time_;
 extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
 
@@ -30,7 +32,7 @@ void execute_cmd(char* command)
         temp = strtok(NULL, " \t");
         if(temp != NULL)
         {
-            printf(C_ERROR "A-Shell: cd: too many arguments\n");
+            fprintf(stderr ,C_ERROR "A-Shell: cd: too many arguments\n");
             printRESET();
             fflush(stdout);
             return;
@@ -98,7 +100,7 @@ void execute_cmd(char* command)
                     }
                     else
                     {
-                        printf(C_ERROR "A-Shell: ls: invalid option -- '%c'\n", fl_string[i]);
+                        fprintf(stderr, C_ERROR "A-Shell: ls: invalid option -- '%c'\n", fl_string[i]);
                         printRESET();
                         fflush(stdout);
                         return;
@@ -146,7 +148,7 @@ void execute_cmd(char* command)
                     }
                     else
                     {
-                        printf(C_ERROR "A-Shell: ls: invalid option -- '%c'\n", fl_string[i]);
+                        fprintf(stderr ,C_ERROR "A-Shell: ls: invalid option -- '%c'\n", fl_string[i]);
                         printRESET();
                         fflush(stdout);
                         return;
@@ -158,7 +160,7 @@ void execute_cmd(char* command)
                 temp[strlen(temp) - 1] = '\0'; temp++; 
                 if(num_targets >= 1)
                 {
-                    printf(C_ERROR "A-Shell: discover: too many arguments for target\n");
+                    fprintf(stderr ,C_ERROR "A-Shell: discover: too many arguments for target\n");
                     printRESET();
                     fflush(stdout);
                     return;
@@ -173,7 +175,7 @@ void execute_cmd(char* command)
             {
                 if(num_dirs >= 1)
                 {
-                    printf(C_ERROR "A-Shell: discover: too many arguments for directory\n");
+                    fprintf(stderr ,C_ERROR "A-Shell: discover: too many arguments for directory\n");
                     printRESET();
                     fflush(stdout);
                     return;
@@ -212,9 +214,10 @@ void execute_cmd(char* command)
         }
         else if(stat(__dir, &__dir_stat) == -1)
         {
-            printf(C_ERROR"A-Shell: discover");
+            fprintf(stderr ,C_ERROR"A-Shell: discover");
             fflush(stdout);
             perror(C_ERROR);
+            printRESET();
             return;
         }
 
@@ -250,7 +253,7 @@ void execute_cmd(char* command)
         temp = strtok(NULL, " \t");
         if(temp != NULL)
         {
-            printf(C_ERROR "A-Shell: history: too many arguments\n");
+            fprintf(stderr ,C_ERROR "A-Shell: history: too many arguments\n");
             printRESET();
             fflush(stdout);
             return;
@@ -265,7 +268,7 @@ void execute_cmd(char* command)
         temp = strtok(NULL, " \t");
         if(temp != NULL)
         {
-            printf(C_ERROR "A-Shell: history: too many arguments\n");
+            fprintf(stderr ,C_ERROR "A-Shell: pinfo: too many arguments\n");
             printRESET();
             fflush(stdout);
             return;
@@ -279,7 +282,7 @@ void execute_cmd(char* command)
         {
             if(!isdigit(pid[i]))
             {
-                printf(C_ERROR "A-Shell: history: numeric argument required\n");
+                fprintf(stderr ,C_ERROR "A-Shell: pinfo: numeric argument required\n");
                 printRESET();
                 fflush(stdout);
                 return;
@@ -290,6 +293,7 @@ void execute_cmd(char* command)
     else
     {
         char* args[MAX_ARGS]; int num_args  = 1;
+        temp = strtok(cmd_copy, " \t");
         args[0] = temp;
         temp = strtok(NULL, " \t");
         while(temp != NULL)
@@ -298,14 +302,16 @@ void execute_cmd(char* command)
             temp  = strtok(NULL, " \t");
         }
         int fork_id = fork();
-
-        if(fork_id== 0)
+ 
+        if(fork_id == 0)
         {
             int pid = getpid();
             setpgid(pid, pid);
             tcsetpgrp (STDIN_FILENO, pid);
+            signal (SIGINT, SIG_DFL);
             signal (SIGTTIN, SIG_DFL);
             signal (SIGTTOU, SIG_DFL);
+            args[num_args] = NULL;
             execvp(args[0], args);
             fprintf(stderr, C_ERROR "A-Shell: %s: command not found", args[0]);
             printRESET();
@@ -319,12 +325,18 @@ void execute_cmd(char* command)
             int pid = getpid();
             setpgid(pid, pid);
             int w;
+            time_t t1 = time(NULL);
             waitpid(fork_id, &w, WUNTRACED);
+            time_t t2 = time(NULL);
+            time_ = t2 - t1;
             tcsetpgrp (STDIN_FILENO, pid);
+            signal (SIGINT, SIG_IGN);
+            signal (SIGTTIN, SIG_IGN);
+            signal (SIGTTOU, SIG_IGN);    
             return;
         }
 
-        printf(C_ERROR "A-Shell: %s: command not found\n", temp);
+        fprintf(stderr ,C_ERROR "A-Shell: %s: command not found\n", temp);
         printRESET();
         fflush(stdout);
     }

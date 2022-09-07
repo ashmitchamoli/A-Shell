@@ -20,7 +20,7 @@ void A_Shell_discover(char* dir, char* target, int flags)
     }
     if(!S_ISDIR(stat_dir.st_mode))
     {
-        printf(C_ERROR"A-Shell: discover: no such directory exists\n");
+        fprintf(stderr ,C_ERROR"A-Shell: discover: no such directory exists\n");
         printRESET();
         fflush(stdout);
         return;
@@ -29,7 +29,7 @@ void A_Shell_discover(char* dir, char* target, int flags)
     int n = scandir(dir, &list, NULL, alphasort);
     if(n == -1)
     {
-        printf(C_ERROR "A-Shell: discover: cannot access '%s'", dir);
+        fprintf(stderr ,C_ERROR "A-Shell: discover: cannot access '%s'", dir);
         fflush(stdout);
         perror(C_ERROR);
         printRESET();
@@ -47,7 +47,7 @@ void A_Shell_discover(char* dir, char* target, int flags)
         struct stat dir_stats;
         if(stat(path, &dir_stats) == -1)
         {
-            printf(C_ERROR "A-Shell: discover: cannot access '%s'", dir);
+            fprintf(stderr ,C_ERROR "A-Shell: discover: cannot access '%s'", dir);
             fflush(stdout);
             perror(C_ERROR);
             printRESET();

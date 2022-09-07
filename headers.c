@@ -6,6 +6,8 @@ char INIT_DIR[DIR_NAME_MAX];
 char PREV_DIR[DIR_NAME_MAX];
 int S_INIT_DIR;
 int num_cmmds;
+int num_bg;
+time_t time_;
 
 void printBLACK()
 {

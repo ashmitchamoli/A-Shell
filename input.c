@@ -1,13 +1,65 @@
 #include "input.h"
 #include "headers.h"
 #include "process_list.h"
+#include "bg_handler.h"
 
 extern int num_cmmds;
 extern char USER[LOGIN_NAME_MAX];
+extern p_list* head;
+extern int num_bg;
 
-void bg_handler(int pid)
+int bg_create(char* cmd)
 {
+    char* temp = strtok(cmd, " \t");
+    if(temp == NULL)
+    {
+        return -1;
+    }
+    char* args[MAX_ARGS];
+    int _num_args = 1;
+    args[0] = temp;
+    temp = strtok(NULL, " \t");
+    while(temp != NULL)
+    {
+        args[_num_args++] = temp;
+        temp = strtok(NULL, " \t");
+    }
 
+    int fork_id = fork();
+
+    if(fork_id == 0)
+    {
+        int pid = getpid();
+        setpgid(pid, pid);
+        signal (SIGINT, SIG_DFL);
+        signal (SIGTTIN, SIG_DFL);
+        signal (SIGTTOU, SIG_DFL);
+        args[_num_args] = NULL;
+        execvp(args[0], args);
+        fprintf(stderr, C_ERROR "A-Shell: %s: command not found", args[0]);
+        printRESET();
+        fflush(stdout);
+        perror(C_ERROR"");
+        printRESET();
+        exit(2);
+    }
+    else
+    {
+        signal (SIGINT, SIG_IGN);
+        signal (SIGTTIN, SIG_IGN);
+        signal (SIGTTOU, SIG_IGN); 
+        add_list(cmd, fork_id);
+        num_bg++;
+        printCYAN();
+        printf("[%d] %d\n", num_bg, fork_id);
+        printRESET();
+        fflush(stdout);
+        int pid = getpid();
+        setpgid(pid, pid);
+        tcsetpgrp (STDIN_FILENO, pid);
+        signal(SIGCHLD, bg_handler);
+        return 0;
+    }
 }
 
 void handle_history(char* inp)
@@ -49,7 +101,7 @@ void handle_history(char* inp)
     f_hist = fopen(path, "w");
     if(num_ent > MAX_HIST)
     {
-        printf(C_ERROR "A-Shell: files tampered");
+        fprintf(stderr ,C_ERROR "A-Shell: files tampered");
         fclose(f_hist);
         exit(1);
     }
@@ -115,7 +167,7 @@ char* get_input()
     }
     if(s_inp > MAX_CMMD_LEN - 1)
     {
-        printf(C_ERROR "A-Shell: input length too long");
+        fprintf(stderr ,C_ERROR "A-Shell: input length too long");
         return NULL;
     }
     if(inp[s_inp - 1] == '\n') inp[s_inp - 1] = '\0';
@@ -134,8 +186,6 @@ char** get_commands(char* inp)
         return NULL;
     }
     char** commands = (char**) malloc(sizeof(char*)*MAX_CMMDS);
-    char** bg_process = (char**)  malloc(sizeof(char*)*MAX_BG_PROC);
-    int num_bg = 0;
     while(temp != NULL)
     {
         commands[num_cmmds++] = temp;
@@ -151,9 +201,8 @@ char** get_commands(char* inp)
             if(commands[i][j] == '&')
             {
                 commands[i][j] = '\0';
-                bg_process[num_bg++] = prev;
-                if(i+1 < n)
-                    prev = &(commands[i][j+1]);
+                bg_create(prev);
+                prev = &(commands[i][j+1]);
             }
         }
         shell_commands[num_shell_cmmds++] = prev;
