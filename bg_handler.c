@@ -4,7 +4,6 @@
 #include "prompt.h"
 
 extern p_list* head;
-extern int num_bg;
 
 void bg_handler()
 {
@@ -25,7 +24,9 @@ void bg_handler()
     {
         return;
     }
-    char* temp = strtok(proc->command, " \t");
+    char* temp = (char*) malloc(sizeof(char) * strlen(proc->command));
+    strcpy(temp, proc->command);
+    temp = strtok(temp, " \t");
     if(WIFEXITED(wstatus))
     {
         fprintf(stderr ,"\n%s with pid %d exited normally\n", temp, pid);
@@ -34,10 +35,10 @@ void bg_handler()
     {
         fprintf(stderr ,"\n%s with pid %d exited abnormally\n", temp, pid);
     }
+    free(proc->command);
+    proc->command = NULL;
+    proc->pid = -1;
     prompt();
     fflush(stderr);
     fflush(stdin);
-    num_bg--;
-    prev->next = proc->next;
-    free(proc);
 }
