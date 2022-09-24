@@ -39,7 +39,13 @@ void enableRawMode() {
 
 int bg_create(char* cmd)
 {
-    char* temp = strtok(cmd, " \t");
+    char cmd_cpy[1024];
+    strcpy(cmd_cpy, cmd);
+    char* temp = strtok(cmd_cpy, " \t");
+    while(*cmd == ' ' || *cmd == '\t')
+    {
+        cmd++;
+    }
     if(temp == NULL)
     {
         return -1;

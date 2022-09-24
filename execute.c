@@ -6,12 +6,17 @@
 #include "discover.h"
 #include "pinfo.h"
 #include "init_shell.h"
+#include "jobs.h"
+#include "process_list.h"
 
 extern time_t time_;
 extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
 extern int stdin_cpy;
 extern int stdout_cpy;
+extern char* input_str;
+extern p_list* head;
+extern int num_bg;
 
 void execute_cmd(char* command)
 {
@@ -254,7 +259,7 @@ void execute_cmd(char* command)
                     }
                     else
                     {
-                        fprintf(stderr ,C_ERROR "A-Shell: ls: invalid option -- '%c'\n", fl_string[i]);
+                        fprintf(stderr ,C_ERROR "A-Shell: discover: invalid option -- '%c'\n", fl_string[i]);
                         printRESET();
                         fflush(NULL);
                         dup2(stdin_cpy, STDIN_FILENO);
@@ -414,10 +419,176 @@ void execute_cmd(char* command)
     }
     else if(strcmp("jobs", temp) == 0)
     {
-        
+        int flags = 1;
+        temp = strtok(NULL, " \t");
+        while(temp != NULL)
+        {
+            if(temp[0] != '-' || strlen(temp) == 1)
+            {
+                fprintf(stderr, C_ERROR"A-Shell: jobs: too many arguments");
+                fflush(NULL);
+                dup2(stdin_cpy, STDIN_FILENO);
+                dup2(stdout_cpy, STDOUT_FILENO);
+                return;
+            }
+            char* fl_string = temp+1;
+            int n = strlen(fl_string);
+            for(int i = 0; i < n; i++)
+            {
+                if(fl_string[i] == 's')
+                {
+                    if(flags%3 != 0)
+                    {
+                        flags *= 3;
+                    }
+                }
+                else if(fl_string[i] == 'r')
+                {
+                    if(flags%2 != 0)
+                    {
+                        flags *= 2;
+                    }
+                }
+                else
+                {
+                    fprintf(stderr ,C_ERROR "A-Shell: jobs: invalid option -- '%c'\n", fl_string[i]);
+                    printRESET();
+                    fflush(NULL);
+                    dup2(stdin_cpy, STDIN_FILENO);
+                    dup2(stdout_cpy, STDOUT_FILENO);
+                    return;
+                }
+            }
+        }
+        A_Shell_jobs(flags);
+    }
+    else if(strcmp("sig", temp) == 0)
+    {
+        temp = strtok(NULL, " \t");
+        if(temp == NULL)
+        {
+            fprintf(stderr, C_ERROR"A-Shell: sig: arg count too low, correct usage: sig <job_index> <signal>\n");
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        for(int i = 0; i < strlen(temp); i++)
+        {
+            if(!isdigit(temp[i]))
+            {
+                fprintf(stderr ,C_ERROR "A-Shell: sig: numeric argument required\n");
+                printRESET();
+                fflush(NULL);
+                dup2(stdin_cpy, STDIN_FILENO);
+                dup2(stdout_cpy, STDOUT_FILENO);
+                return;
+            }
+        }
+        int job_index = atoi(temp);
+        temp = strtok(NULL, " \t");
+        if(temp == NULL)
+        {
+            fprintf(stderr, C_ERROR"A-Shell: sig: arg count too low, correct usage: sig <job_index> <signal>\n"C_RESET);
+            fflush(NULL);
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        for(int i = 0; i < strlen(temp); i++)
+        {
+            if(!isdigit(temp[i]))
+            {
+                fprintf(stderr ,C_ERROR"A-Shell: sig: numeric argument required\n"C_RESET);
+                fflush(NULL);
+                dup2(stdin_cpy, STDIN_FILENO);
+                dup2(stdout_cpy, STDOUT_FILENO);
+                return;
+            }
+        }
+        int signal_ = atoi(temp);
+        temp = strtok(NULL, "\t");
+        if(temp != NULL)
+        {
+            fprintf(stderr ,C_ERROR"A-Shell: sig: too many arguments\n"C_RESET);
+            fflush(NULL);
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        A_Shell_sig(job_index, signal_);
+    }
+    else if(strcmp("fg", temp) == 0)
+    {
+        temp = strtok(NULL, " \t");
+        if(temp == NULL)
+        {
+            fprintf(stderr, C_ERROR"A-Shell: fg: arg count too low, correct usage: sig <job_index> <signal>\n");
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        for(int i = 0; i < strlen(temp); i++)
+        {
+            if(!isdigit(temp[i]))
+            {
+                fprintf(stderr ,C_ERROR "A-Shell: fg: numeric argument required\n");
+                printRESET();
+                fflush(NULL);
+                dup2(stdin_cpy, STDIN_FILENO);
+                dup2(stdout_cpy, STDOUT_FILENO);
+                return;
+            }
+        }
+        int job_index = atoi(temp);
+        temp = strtok(NULL, "\t");
+        if(temp != NULL)
+        {
+            fprintf(stderr ,C_ERROR"A-Shell: fg: too many arguments\n"C_RESET);
+            fflush(NULL);
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        A_Shell_fg(job_index);
+    }
+    else if(strcmp("bg", temp) == 0)
+    {
+        temp = strtok(NULL, " \t");
+        if(temp == NULL)
+        {
+            fprintf(stderr, C_ERROR"A-Shell: bg: arg count too low, correct usage: sig <job_index> <signal>\n");
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        for(int i = 0; i < strlen(temp); i++)
+        {
+            if(!isdigit(temp[i]))
+            {
+                fprintf(stderr ,C_ERROR "A-Shell: bg: numeric argument required\n");
+                printRESET();
+                fflush(NULL);
+                dup2(stdin_cpy, STDIN_FILENO);
+                dup2(stdout_cpy, STDOUT_FILENO);
+                return;
+            }
+        }
+        int job_index = atoi(temp);
+        temp = strtok(NULL, "\t");
+        if(temp != NULL)
+        {
+            fprintf(stderr ,C_ERROR"A-Shell: bg: too many arguments\n"C_RESET);
+            fflush(NULL);
+            dup2(stdin_cpy, STDIN_FILENO);
+            dup2(stdout_cpy, STDOUT_FILENO);
+            return;
+        }
+        A_Shell_bg(job_index);
     }
     else
     {
+        input_str =  (char*)malloc(sizeof(char) * strlen(cmd_copy));
+        strcpy(input_str, cmd_copy);
         char* args[MAX_ARGS]; int num_args  = 1;
         temp = strtok(cmd_copy, " \t");
         args[0] = temp;
@@ -427,6 +598,7 @@ void execute_cmd(char* command)
             args[num_args++] = temp;
             temp  = strtok(NULL, " \t");
         }
+
         int fork_id = fork();
  
         if(fork_id == 0)
@@ -455,6 +627,21 @@ void execute_cmd(char* command)
             waitpid(fork_id, &w, WUNTRACED);
             time_t t2 = time(NULL);
             time_ = t2 - t1;
+            if(WIFSTOPPED(w))
+            {
+                num_bg++;
+                add_list(input_str, fork_id, num_bg);
+                p_list* proc_ = NULL;
+                for(p_list* i = head->next; i != NULL; i = i->next)
+                {
+                    if(i->pid == fork_id)
+                    {
+                        proc_ = i;
+                        break;
+                    }
+                }
+                proc_->status = 'T';
+            }
             tcsetpgrp(STDIN_FILENO, pid);
             signal (SIGINT, SIG_IGN);
             signal (SIGTTIN, SIG_IGN);
