@@ -1,14 +1,28 @@
 #include "init_shell.h"
 #include "headers.h"
+#include "process_list.h"
+#include "bg_handler.h"
 
 extern char USER[LOGIN_NAME_MAX];
 extern char ROOT[HOST_NAME_MAX];
 extern char INIT_DIR[DIR_NAME_MAX];
 extern char PREV_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
+extern p_list* head;
+extern int num_bg;
+extern time_t time_;
 
 void init_shell()
 {
+    signal(SIGCHLD, bg_handler);
+    time_ = 0;
+    head = (p_list*) malloc(sizeof(p_list));
+    head->command = NULL;
+    head->pid = -1;
+    head->next = NULL;
+    num_bg = 0;
+    
+    signal (SIGINT, SIG_IGN);
     signal (SIGTTIN, SIG_IGN);
     signal (SIGTTOU, SIG_IGN);
     if(gethostname(ROOT, HOST_NAME_MAX) == -1)

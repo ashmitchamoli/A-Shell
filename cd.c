@@ -20,7 +20,7 @@ void A_Shell_cd(char* arg)
     {
         if(strcmp(PREV_DIR, "") == 0)
         {
-            printf(C_ERROR "A-Shell: cd: PREV_DIR not set\n");
+            fprintf(stderr ,C_ERROR "A-Shell: cd: PREV_DIR not set\n");
             printRESET();
 
             fflush(stdout);

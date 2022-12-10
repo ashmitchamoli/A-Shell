@@ -12,14 +12,13 @@ int alphacmp(const void* a, const void* b)
     char* t1 = x;
     char* t2 = y;
 
-    while(*x == '.' || *x == '/'|| *x == '~') x++;
-    while(*y == '.' || *y == '/'|| *y == '~') y++;
+    while(*x == '.' || *x == '/'|| *x == '~' || *x == '\'' || *x == '\"') x++;
+    while(*y == '.' || *y == '/'|| *y == '~' || *y == '\'' || *y == '\"') y++;
 
-    if(*x == '\0' && *y == '\0')
+    if(strcasecmp(x, y) == 0)
     {
         return (strlen(t1) < strlen(t2) ? -1 : 1);
     }
-
     return strcasecmp(x, y);
 }
 
@@ -29,10 +28,11 @@ int alphacmp_sdir(const struct dirent **a, const struct dirent **b)
     const char* y = (*b)->d_name;
     const char* t1 = x;
     const char* t2 = y;
-    while(*x == '.' || *x == '/'|| *x == '~') x++;
-    while(*y == '.' || *y == '/'|| *y == '~') y++;
+    
+    while(*x == '.' || *x == '/'|| *x == '~' || *x == '\'' || *x == '\"') x++;
+    while(*y == '.' || *y == '/'|| *y == '~' || *y == '\'' || *y == '\"') y++;
 
-    if(*x == '\0' && *y == '\0')
+    if(strcasecmp(x, y) == 0)
     {
         return (strlen(t1) < strlen(t2) ? -1 : 1);
     }
@@ -41,7 +41,7 @@ int alphacmp_sdir(const struct dirent **a, const struct dirent **b)
 
 int list_dir(char *dir, char* cur_dir, int flags)
 {
-    char months[][4] = {"Jan\0", "Feb\0", "Mar\0", "Apr\0", "May\0", "Jun\0", "Jul\0", "Aug\0", "Sep\0", "Nov\0", "Dec\0"};
+    char months[][4] = {"Jan\0", "Feb\0", "Mar\0", "Apr\0", "May\0", "Jun\0", "Jul\0", "Aug\0", "Sep\0", "Oct\0", "Nov\0", "Dec\0"};
     struct stat stats;
     if(dir[0] == '~')
     {
@@ -112,7 +112,7 @@ int list_dir(char *dir, char* cur_dir, int flags)
         }
         printf("%s\n", dir);
         printRESET();
-
+        fflush(NULL);
         return 0;
     }
 
@@ -122,13 +122,13 @@ int list_dir(char *dir, char* cur_dir, int flags)
     {
         if(errno == ENOTDIR)
         {
-            printf(C_ERROR "A-Shell: ls: cannot access '%s'", dir);
+            fprintf(stderr ,C_ERROR "A-Shell: ls: cannot access '%s'", dir);
         }
         else
         {
-            printf(C_ERROR "A-Shell: ls: %s", dir);
+            fprintf(stderr ,C_ERROR "A-Shell: ls: %s", dir);
         }
-        fflush(stdout);
+        fflush(NULL);
         perror(C_ERROR);
         printRESET();
         return -1;
@@ -144,8 +144,8 @@ int list_dir(char *dir, char* cur_dir, int flags)
         struct stat sb;
         if(stat(path, &sb) == -1)
         {
-            printf(C_ERROR "A-Shell: ls: cannot access '%s'", dir);
-            fflush(stdout);
+            fprintf(stderr ,C_ERROR "A-Shell: ls: cannot access '%s'", dir);
+            fflush(NULL);
             perror(C_ERROR);
             printRESET();
             return -1;
@@ -190,11 +190,11 @@ int list_dir(char *dir, char* cur_dir, int flags)
 
         struct stat sb;
         // printf("%s\n", cur_dir);
-        // fflush(stdout);
+        // fflush(NULL);
         if(stat(path, &sb) == -1)
         {
-            printf(C_ERROR "3A-Shell: ls: cannot access '%s'", dir);
-            fflush(stdout);
+            fprintf(stderr ,C_ERROR "A-Shell: ls: cannot access '%s'", dir);
+            fflush(NULL);
             perror(C_ERROR);
             printRESET();
             return -1;
@@ -229,7 +229,7 @@ int list_dir(char *dir, char* cur_dir, int flags)
             
             u_name = getpwuid(sb.st_uid);
             g_name = getgrgid(sb.st_gid);
-            printf("%*s %*s ",size_length, u_name->pw_name, size_grp, g_name->gr_name);
+            printf("%*s %*s ", -user_size, u_name->pw_name, -size_grp, g_name->gr_name);
 
             printf("%*ld ", size_length, sb.st_size);
 
@@ -290,7 +290,7 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
                 // should I put a '/' at the end in this case
                 // no because its already there
                 // printf("%s\n", cur_dir);
-                // fflush(stdout);
+                // fflush(NULL);
             }
             else
             {
@@ -304,8 +304,8 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
                 if(stat(cur_dir, &stats) == -1)
                 {
                     l_invalid[num_invalid++] = dirs[i];
-                    printf(C_ERROR"A-Shell: ls: cannot access '%s'", dirs[i]);
-                    fflush(stdout);
+                    fprintf(stderr ,C_ERROR"A-Shell: ls: cannot access '%s'", dirs[i]);
+                    fflush(NULL);
                     perror(C_ERROR);        
                     printRESET();
                     continue;
@@ -317,8 +317,8 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
                 if(stat(dirs[i], &stats) == -1)
                 {
                     l_invalid[num_invalid++] = dirs[i];
-                    printf(C_ERROR"A-Shell: ls: cannot access '%s'", dirs[i]);
-                    fflush(stdout);
+                    fprintf(stderr ,C_ERROR"A-Shell: ls: cannot access '%s'", dirs[i]);
+                    fflush(NULL);
                     perror(C_ERROR);        
                     printRESET();
                     continue;
@@ -349,7 +349,7 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
                 // should I put a '/' at the end in this case
                 // no because its already there
                 // printf("%s\n", cur_dir);
-                // fflush(stdout);
+                // fflush(NULL);
             }
             else
             {
@@ -361,6 +361,7 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
             {
                 printf("\n");
             }
+            fflush(NULL);
         }
         for(int i = 0; i < num_dirs; i++)
         {
@@ -376,7 +377,7 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
                 // should I put a '/' at the end in this case
                 // no because its already there
                 // printf("%s\n", cur_dir);
-                // fflush(stdout);
+                // fflush(NULL);
             }
             else
             {
@@ -404,6 +405,8 @@ void A_Shell_ls(char** dirs, int num_dir, int flags)
             {
                 printf("\n");
             }
+            fflush(NULL);
         }
     }
+    fflush(NULL);
 }

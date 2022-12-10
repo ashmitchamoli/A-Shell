@@ -5,6 +5,7 @@ extern char USER[LOGIN_NAME_MAX];
 extern char ROOT[HOST_NAME_MAX];
 extern char INIT_DIR[DIR_NAME_MAX];
 extern int S_INIT_DIR;
+extern int time_;
 
 void prompt()
 {
@@ -50,19 +51,23 @@ void prompt()
             printDir = -1;
         }
     }
-    
     if(printDir == -1)
     {
-        printf("%s>", cwd);
+        printf("%s", cwd);
     }
     else if(printDir == 0)
     {
-        printf("~>");
+        printf("~");
     }
     else
     {
-        printf("~%s>", cwd + S_INIT_DIR);
+        printf("~%s", cwd + S_INIT_DIR);
     }
+    if(time_ != 0)
+        printf(" took %lus>", time_);
+    else
+        printf(">");
+    time_ = 0;
     printRESET();
     fflush(stdout);
 }

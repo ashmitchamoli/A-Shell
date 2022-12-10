@@ -18,6 +18,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <ctype.h>
+#include <termios.h>
 
 #define DIR_NAME_MAX 1024
 #define MAX_CMMDS 1024
@@ -27,10 +28,12 @@
 #define C_FILE "\033[0;32m"
 #define C_EXEC "\033[1;32m"
 #define C_DIR "\033[1;034m"
+#define C_RESET "\033[0m"
 #define MAX_HIST 20
 #define DEFAULT_HIST 10
 #define MAX_ARGS 1024
 #define MAX_BG_PROC 1024
+#define MAX_JOBS 200
 
 void printRED();
 void printBLACK();
