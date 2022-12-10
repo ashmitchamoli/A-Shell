@@ -74,6 +74,6 @@ Brings the specified job index, a currently background job, to the foreground an
 - Main implementation in `jobs.c`
 
 ### `bg`
-Changes the state of a stopped background process to running in the background. It does nothing is the background job is already running.
+Changes the state of a stopped background process to running in the background. It does nothing if the background job is already running.
 - Main implementation in `jobs.c`
 
